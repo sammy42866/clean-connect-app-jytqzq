@@ -1,161 +1,235 @@
-import React from "react";
-import { Stack, Link } from "expo-router";
-import { FlatList, Pressable, StyleSheet, View, Text, Alert, Platform } from "react-native";
-import { IconSymbol } from "@/components/IconSymbol";
-import { GlassView } from "expo-glass-effect";
-import { useTheme } from "@react-navigation/native";
 
-const ICON_COLOR = "#007AFF";
+import React from "react";
+import { Stack } from "expo-router";
+import { View, Text, StyleSheet, ScrollView, Platform } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "@react-navigation/native";
+import { useAuth } from "@/contexts/AuthContext";
+import { colors, textStyles, commonStyles } from "@/styles/commonStyles";
+import { CustomButton } from "@/components/CustomButton";
 
 export default function HomeScreen() {
   const theme = useTheme();
-  const modalDemos = [
-    {
-      title: "Standard Modal",
-      description: "Full screen modal presentation",
-      route: "/modal",
-      color: "#007AFF",
-    },
-    {
-      title: "Form Sheet",
-      description: "Bottom sheet with detents and grabber",
-      route: "/formsheet",
-      color: "#34C759",
-    },
-    {
-      title: "Transparent Modal",
-      description: "Overlay without obscuring background",
-      route: "/transparent-modal",
-      color: "#FF9500",
+  const { user, logout } = useAuth();
+
+  const getRoleSpecificContent = () => {
+    switch (user?.role) {
+      case 'customer':
+        return (
+          <View style={styles.roleContent}>
+            <Text style={textStyles.subtitle}>Welcome, {user.name}!</Text>
+            <Text style={textStyles.bodySecondary}>
+              Find and book trusted cleaning services in your area.
+            </Text>
+            
+            <View style={styles.quickActions}>
+              <Text style={[textStyles.body, styles.sectionTitle]}>Quick Actions</Text>
+              <CustomButton
+                title="Browse Cleaning Services"
+                onPress={() => console.log('Browse services')}
+                style={styles.actionButton}
+              />
+              <CustomButton
+                title="View My Bookings"
+                onPress={() => console.log('View bookings')}
+                variant="outline"
+                style={styles.actionButton}
+              />
+            </View>
+          </View>
+        );
+      
+      case 'business':
+        return (
+          <View style={styles.roleContent}>
+            <Text style={textStyles.subtitle}>Business Dashboard</Text>
+            <Text style={textStyles.bodySecondary}>
+              Manage your cleaning business and workers.
+            </Text>
+            
+            <View style={styles.quickActions}>
+              <Text style={[textStyles.body, styles.sectionTitle]}>Quick Actions</Text>
+              <CustomButton
+                title="Manage Workers"
+                onPress={() => console.log('Manage workers')}
+                style={styles.actionButton}
+              />
+              <CustomButton
+                title="View Jobs"
+                onPress={() => console.log('View jobs')}
+                variant="outline"
+                style={styles.actionButton}
+              />
+              <CustomButton
+                title="Analytics"
+                onPress={() => console.log('View analytics')}
+                variant="accent"
+                style={styles.actionButton}
+              />
+            </View>
+          </View>
+        );
+      
+      case 'worker':
+        return (
+          <View style={styles.roleContent}>
+            <Text style={textStyles.subtitle}>Worker Dashboard</Text>
+            <Text style={textStyles.bodySecondary}>
+              View your assigned jobs and communicate with your manager.
+            </Text>
+            
+            <View style={styles.quickActions}>
+              <Text style={[textStyles.body, styles.sectionTitle]}>Quick Actions</Text>
+              <CustomButton
+                title="View My Jobs"
+                onPress={() => console.log('View jobs')}
+                style={styles.actionButton}
+              />
+              <CustomButton
+                title="Messages"
+                onPress={() => console.log('View messages')}
+                variant="outline"
+                style={styles.actionButton}
+              />
+            </View>
+          </View>
+        );
+      
+      case 'admin':
+        return (
+          <View style={styles.roleContent}>
+            <Text style={textStyles.subtitle}>Admin Panel</Text>
+            <Text style={textStyles.bodySecondary}>
+              Manage users, businesses, and system settings.
+            </Text>
+            
+            <View style={styles.quickActions}>
+              <Text style={[textStyles.body, styles.sectionTitle]}>Admin Actions</Text>
+              <CustomButton
+                title="Manage Users"
+                onPress={() => console.log('Manage users')}
+                style={styles.actionButton}
+              />
+              <CustomButton
+                title="Business Oversight"
+                onPress={() => console.log('Business oversight')}
+                variant="outline"
+                style={styles.actionButton}
+              />
+              <CustomButton
+                title="System Settings"
+                onPress={() => console.log('System settings')}
+                variant="secondary"
+                style={styles.actionButton}
+              />
+            </View>
+          </View>
+        );
+      
+      default:
+        return (
+          <View style={styles.roleContent}>
+            <Text style={textStyles.subtitle}>Welcome to CleanConnect</Text>
+            <Text style={textStyles.bodySecondary}>
+              Please log in to access your dashboard.
+            </Text>
+          </View>
+        );
     }
-  ];
-
-  const renderModalDemo = ({ item }: { item: (typeof modalDemos)[0] }) => (
-    <GlassView style={[
-      styles.demoCard,
-      Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-    ]} glassEffectStyle="regular">
-      <View style={[styles.demoIcon, { backgroundColor: item.color }]}>
-        <IconSymbol name="square.grid.3x3" color="white" size={24} />
-      </View>
-      <View style={styles.demoContent}>
-        <Text style={[styles.demoTitle, { color: theme.colors.text }]}>{item.title}</Text>
-        <Text style={[styles.demoDescription, { color: theme.dark ? '#98989D' : '#666' }]}>{item.description}</Text>
-      </View>
-      <Link href={item.route as any} asChild>
-        <Pressable>
-          <GlassView style={[
-            styles.tryButton,
-            Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)' }
-          ]} glassEffectStyle="clear">
-            <Text style={[styles.tryButtonText, { color: theme.colors.primary }]}>Try It</Text>
-          </GlassView>
-        </Pressable>
-      </Link>
-    </GlassView>
-  );
-
-  const renderHeaderRight = () => (
-    <Pressable
-      onPress={() => Alert.alert("Not Implemented", "This feature is not implemented yet")}
-      style={styles.headerButtonContainer}
-    >
-      <IconSymbol name="plus" color={theme.colors.primary} />
-    </Pressable>
-  );
-
-  const renderHeaderLeft = () => (
-    <Pressable
-      onPress={() => Alert.alert("Not Implemented", "This feature is not implemented yet")}
-      style={styles.headerButtonContainer}
-    >
-      <IconSymbol
-        name="gear"
-        color={theme.colors.primary}
-      />
-    </Pressable>
-  );
+  };
 
   return (
-    <>
+    <SafeAreaView style={commonStyles.safeArea}>
       {Platform.OS === 'ios' && (
         <Stack.Screen
           options={{
-            title: "Building the app...",
-            headerRight: renderHeaderRight,
-            headerLeft: renderHeaderLeft,
+            title: "CleanConnect",
+            headerShown: true,
           }}
         />
       )}
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <FlatList
-          data={modalDemos}
-          renderItem={renderModalDemo}
-          keyExtractor={(item) => item.route}
-          contentContainerStyle={[
-            styles.listContainer,
-            Platform.OS !== 'ios' && styles.listContainerWithTabBar
-          ]}
-          contentInsetAdjustmentBehavior="automatic"
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
-    </>
+      <ScrollView 
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          Platform.OS !== 'ios' && styles.scrollContentWithTabBar
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.appTitle}>🧽 CleanConnect</Text>
+          <Text style={[textStyles.caption, styles.roleIndicator]}>
+            {user?.role?.toUpperCase()} ACCOUNT
+          </Text>
+        </View>
+
+        {getRoleSpecificContent()}
+
+        <View style={styles.footer}>
+          <CustomButton
+            title="Sign Out"
+            onPress={logout}
+            variant="outline"
+            style={styles.signOutButton}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor handled dynamically
   },
-  listContainer: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+  scrollContent: {
+    flexGrow: 1,
+    padding: 20,
   },
-  listContainerWithTabBar: {
-    paddingBottom: 100, // Extra padding for floating tab bar
+  scrollContentWithTabBar: {
+    paddingBottom: 100,
   },
-  demoCard: {
+  header: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  appTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: 8,
+  },
+  roleIndicator: {
+    backgroundColor: colors.primary,
+    color: colors.card,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    fontSize: 12,
+    fontWeight: '600',
   },
-  demoIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  demoContent: {
+  roleContent: {
     flex: 1,
+    alignItems: 'center',
   },
-  demoTitle: {
-    fontSize: 18,
+  quickActions: {
+    width: '100%',
+    marginTop: 30,
+  },
+  sectionTitle: {
     fontWeight: '600',
-    marginBottom: 4,
-    // color handled dynamically
+    marginBottom: 16,
+    textAlign: 'center',
   },
-  demoDescription: {
-    fontSize: 14,
-    lineHeight: 18,
-    // color handled dynamically
+  actionButton: {
+    marginVertical: 6,
   },
-  headerButtonContainer: {
-    padding: 6,
+  footer: {
+    marginTop: 40,
+    alignItems: 'center',
   },
-  tryButton: {
-    paddingHorizontal: 16,
+  signOutButton: {
     paddingVertical: 8,
-    borderRadius: 6,
-  },
-  tryButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    // color handled dynamically
+    paddingHorizontal: 24,
   },
 });

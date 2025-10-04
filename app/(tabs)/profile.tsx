@@ -1,91 +1,220 @@
+
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, Platform } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { IconSymbol } from "@/components/IconSymbol";
-import { GlassView } from "expo-glass-effect";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from "@react-navigation/native";
+import { useAuth } from "@/contexts/AuthContext";
+import { colors, textStyles, commonStyles } from "@/styles/commonStyles";
+import { CustomButton } from "@/components/CustomButton";
 
 export default function ProfileScreen() {
   const theme = useTheme();
+  const { user, logout } = useAuth();
+
+  const getRoleSpecificInfo = () => {
+    switch (user?.role) {
+      case 'customer':
+        return (
+          <View style={styles.roleInfo}>
+            <Text style={textStyles.body}>📍 Properties: 2</Text>
+            <Text style={textStyles.body}>📅 Total Bookings: 15</Text>
+            <Text style={textStyles.body}>⭐ Average Rating Given: 4.7</Text>
+          </View>
+        );
+      
+      case 'business':
+        return (
+          <View style={styles.roleInfo}>
+            <Text style={textStyles.body}>🏢 Business: Sparkle Clean Services</Text>
+            <Text style={textStyles.body}>👥 Workers: 5</Text>
+            <Text style={textStyles.body}>💼 Completed Jobs: 142</Text>
+            <Text style={textStyles.body}>⭐ Business Rating: 4.8</Text>
+            <Text style={textStyles.body}>💳 Subscription: Active</Text>
+          </View>
+        );
+      
+      case 'worker':
+        return (
+          <View style={styles.roleInfo}>
+            <Text style={textStyles.body}>🏢 Employer: Sparkle Clean Services</Text>
+            <Text style={textStyles.body}>✅ Completed Jobs: 28</Text>
+            <Text style={textStyles.body}>🛠️ Skills: House Cleaning, Deep Cleaning</Text>
+            <Text style={textStyles.body}>📊 Performance: Excellent</Text>
+          </View>
+        );
+      
+      case 'admin':
+        return (
+          <View style={styles.roleInfo}>
+            <Text style={textStyles.body}>🔐 Admin Level: Super Admin</Text>
+            <Text style={textStyles.body}>👥 Total Users: 1,247</Text>
+            <Text style={textStyles.body}>🏢 Active Businesses: 156</Text>
+            <Text style={textStyles.body}>📊 System Health: Excellent</Text>
+          </View>
+        );
+      
+      default:
+        return null;
+    }
+  };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={['top']}>
-      <ScrollView
-        style={styles.container}
+    <SafeAreaView style={commonStyles.safeArea}>
+      <ScrollView 
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
         contentContainerStyle={[
-          styles.contentContainer,
-          Platform.OS !== 'ios' && styles.contentContainerWithTabBar
+          styles.scrollContent,
+          Platform.OS !== 'ios' && styles.scrollContentWithTabBar
         ]}
+        showsVerticalScrollIndicator={false}
       >
-        <GlassView style={[
-          styles.profileHeader,
-          Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-        ]} glassEffectStyle="regular">
-          <IconSymbol name="person.circle.fill" size={80} color={theme.colors.primary} />
-          <Text style={[styles.name, { color: theme.colors.text }]}>John Doe</Text>
-          <Text style={[styles.email, { color: theme.dark ? '#98989D' : '#666' }]}>john.doe@example.com</Text>
-        </GlassView>
+        <View style={styles.header}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {user?.name?.charAt(0)?.toUpperCase() || '?'}
+            </Text>
+          </View>
+          
+          <Text style={textStyles.title}>{user?.name || 'User'}</Text>
+          <Text style={[textStyles.bodySecondary, styles.email]}>{user?.email}</Text>
+          
+          <View style={[styles.roleBadge, { backgroundColor: colors.primary }]}>
+            <Text style={styles.roleText}>{user?.role?.toUpperCase()}</Text>
+          </View>
+        </View>
 
-        <GlassView style={[
-          styles.section,
-          Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-        ]} glassEffectStyle="regular">
-          <View style={styles.infoRow}>
-            <IconSymbol name="phone.fill" size={20} color={theme.dark ? '#98989D' : '#666'} />
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>+1 (555) 123-4567</Text>
+        <View style={[commonStyles.card, styles.infoCard]}>
+          <Text style={[textStyles.subtitle, styles.cardTitle]}>Account Information</Text>
+          {getRoleSpecificInfo()}
+          
+          <View style={styles.accountDetails}>
+            <Text style={textStyles.body}>📧 Email: {user?.email}</Text>
+            <Text style={textStyles.body}>📅 Member Since: {user?.createdAt?.toLocaleDateString()}</Text>
           </View>
-          <View style={styles.infoRow}>
-            <IconSymbol name="location.fill" size={20} color={theme.dark ? '#98989D' : '#666'} />
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>San Francisco, CA</Text>
-          </View>
-        </GlassView>
+        </View>
+
+        <View style={[commonStyles.card, styles.actionsCard]}>
+          <Text style={[textStyles.subtitle, styles.cardTitle]}>Account Actions</Text>
+          
+          <CustomButton
+            title="Edit Profile"
+            onPress={() => console.log('Edit profile')}
+            variant="outline"
+            style={styles.actionButton}
+          />
+          
+          <CustomButton
+            title="Change Password"
+            onPress={() => console.log('Change password')}
+            variant="outline"
+            style={styles.actionButton}
+          />
+          
+          <CustomButton
+            title="Notification Settings"
+            onPress={() => console.log('Notification settings')}
+            variant="outline"
+            style={styles.actionButton}
+          />
+          
+          {user?.role === 'business' && (
+            <CustomButton
+              title="Manage Subscription"
+              onPress={() => console.log('Manage subscription')}
+              variant="accent"
+              style={styles.actionButton}
+            />
+          )}
+        </View>
+
+        <View style={styles.footer}>
+          <CustomButton
+            title="Sign Out"
+            onPress={logout}
+            variant="secondary"
+            style={styles.signOutButton}
+          />
+          
+          <Text style={[textStyles.caption, styles.version]}>
+            CleanConnect v1.0.0
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    // backgroundColor handled dynamically
-  },
   container: {
     flex: 1,
   },
-  contentContainer: {
+  scrollContent: {
+    flexGrow: 1,
     padding: 20,
   },
-  contentContainerWithTabBar: {
-    paddingBottom: 100, // Extra padding for floating tab bar
+  scrollContentWithTabBar: {
+    paddingBottom: 100,
   },
-  profileHeader: {
+  header: {
     alignItems: 'center',
-    borderRadius: 12,
-    padding: 32,
-    marginBottom: 16,
-    gap: 12,
+    marginBottom: 30,
   },
-  name: {
-    fontSize: 24,
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatarText: {
+    fontSize: 32,
     fontWeight: 'bold',
-    // color handled dynamically
+    color: colors.card,
   },
   email: {
-    fontSize: 16,
-    // color handled dynamically
+    marginTop: 4,
+    marginBottom: 12,
   },
-  section: {
-    borderRadius: 12,
-    padding: 20,
-    gap: 12,
+  roleBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
-  infoRow: {
-    flexDirection: 'row',
+  roleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.card,
+  },
+  infoCard: {
+    marginBottom: 20,
+  },
+  actionsCard: {
+    marginBottom: 20,
+  },
+  cardTitle: {
+    marginBottom: 16,
+  },
+  roleInfo: {
+    marginBottom: 16,
+  },
+  accountDetails: {
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  actionButton: {
+    marginVertical: 6,
+  },
+  footer: {
     alignItems: 'center',
-    gap: 12,
+    marginTop: 20,
   },
-  infoText: {
-    fontSize: 16,
-    // color handled dynamically
+  signOutButton: {
+    marginBottom: 20,
+  },
+  version: {
+    opacity: 0.6,
   },
 });
