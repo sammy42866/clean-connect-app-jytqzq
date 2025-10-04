@@ -1,80 +1,108 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CustomInput } from '@/components/CustomInput';
+import { CustomButton } from '@/components/CustomButton';
+import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import { colors, textStyles, commonStyles } from '@/styles/commonStyles';
-import { CustomButton } from '@/components/CustomButton';
-import { CustomInput } from '@/components/CustomInput';
-import { useAuth } from '@/contexts/AuthContext';
+import { IconSymbol } from '@/components/IconSymbol';
 
 export const AdminLoginScreen: React.FC = () => {
   const [password, setPassword] = useState('');
-  const { adminLogin, isLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { adminLogin } = useAuth();
 
-  const handleSubmit = async () => {
-    if (!password) {
+  const handleLogin = async () => {
+    if (!password.trim()) {
       Alert.alert('Error', 'Please enter the admin password');
       return;
     }
 
+    setIsLoading(true);
+    console.log('Attempting admin login...');
+    
     try {
       const success = await adminLogin(password);
-
+      
       if (success) {
+        console.log('Admin login successful');
         router.replace('/(tabs)');
       } else {
         Alert.alert('Access Denied', 'Invalid admin password');
-        setPassword('');
       }
     } catch (error) {
       console.error('Admin login error:', error);
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      Alert.alert('Error', 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handleBack = () => {
+    router.back();
+  };
+
   return (
-    <SafeAreaView style={commonStyles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.adminIcon}>🔐</Text>
-          <Text style={textStyles.title}>Admin Access</Text>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+            <IconSymbol name="chevron.left" size={24} color={colors.adminText} />
+          </TouchableOpacity>
+          
+          <View style={styles.logoContainer}>
+            <View style={styles.adminLogo}>
+              <IconSymbol name="gear" size={32} color={colors.adminAccent} />
+            </View>
+          </View>
+          
+          <Text style={[textStyles.title, styles.title]}>Admin Access</Text>
           <Text style={[textStyles.bodySecondary, styles.subtitle]}>
             Enter admin credentials to continue
           </Text>
         </View>
 
+        {/* Form */}
         <View style={styles.form}>
           <CustomInput
             label="Admin Password"
             value={password}
             onChangeText={setPassword}
-            placeholder="Enter admin password"
             secureTextEntry
+            placeholder="Enter admin password"
+            leftIcon="lock.fill"
+            style={styles.input}
             autoCapitalize="none"
+            autoCorrect={false}
           />
 
           <CustomButton
-            title="Access Admin Panel"
-            onPress={handleSubmit}
+            title={isLoading ? 'Authenticating...' : 'Access Admin Panel'}
+            onPress={handleLogin}
             loading={isLoading}
-            style={styles.submitButton}
+            style={styles.loginButton}
+            variant="primary"
+            size="large"
           />
 
-          <View style={styles.hintContainer}>
-            <Text style={[textStyles.caption, styles.hintText]}>
-              💡 Demo password: admin123
-            </Text>
+          <View style={styles.infoContainer}>
+            <View style={styles.infoRow}>
+              <IconSymbol name="info.circle" size={16} color={colors.adminText} />
+              <Text style={[textStyles.small, styles.infoText]}>
+                Admin access is restricted to authorized personnel only
+              </Text>
+            </View>
           </View>
         </View>
 
+        {/* Footer */}
         <View style={styles.footer}>
-          <CustomButton
-            title="Cancel"
-            onPress={() => router.back()}
-            variant="outline"
-            style={styles.cancelButton}
-          />
+          <Text style={[textStyles.small, styles.footerText]}>
+            CleanConnect Admin Panel v1.0
+          </Text>
         </View>
       </View>
     </SafeAreaView>
@@ -82,45 +110,94 @@ export const AdminLoginScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.adminBackground,
+  },
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
+    backgroundColor: colors.adminBackground,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    paddingTop: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    position: 'relative',
   },
-  adminIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+  backButton: {
+    position: 'absolute',
+    left: 24,
+    top: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.adminCard,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoContainer: {
+    marginBottom: 24,
+    marginTop: 40,
+  },
+  adminLogo: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.adminCard,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.adminAccent,
+  },
+  title: {
+    color: colors.adminText,
+    marginBottom: 8,
   },
   subtitle: {
+    color: colors.adminText,
+    opacity: 0.7,
     textAlign: 'center',
-    marginTop: 8,
   },
   form: {
-    marginBottom: 40,
+    flex: 1,
+    paddingHorizontal: 24,
   },
-  submitButton: {
-    marginTop: 20,
+  input: {
+    backgroundColor: colors.adminCard,
+    borderColor: colors.neutralDark,
+    color: colors.adminText,
+    marginBottom: 24,
   },
-  hintContainer: {
-    alignItems: 'center',
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: colors.highlight,
-    borderRadius: 8,
+  loginButton: {
+    backgroundColor: colors.adminAccent,
+    marginBottom: 24,
   },
-  hintText: {
-    color: colors.text,
-    textAlign: 'center',
+  infoContainer: {
+    backgroundColor: colors.adminCard,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.neutralDark,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  infoText: {
+    color: colors.adminText,
+    opacity: 0.8,
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: 18,
   },
   footer: {
     alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
-  cancelButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+  footerText: {
+    color: colors.adminText,
+    opacity: 0.5,
   },
 });

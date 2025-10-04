@@ -1,49 +1,95 @@
 
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { colors, textStyles } from '@/styles/commonStyles';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
+import { colors, textStyles, buttonStyles } from '@/styles/commonStyles';
 
 interface CustomButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'accent' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   loading?: boolean;
-  style?: any;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
+  icon?: React.ReactNode;
 }
 
 export const CustomButton: React.FC<CustomButtonProps> = ({
   title,
   onPress,
   variant = 'primary',
+  size = 'medium',
   disabled = false,
   loading = false,
   style,
+  textStyle,
+  icon,
 }) => {
-  const getButtonStyle = () => {
+  const getButtonStyle = (): ViewStyle => {
+    let baseStyle = buttonStyles.primary;
+    
     switch (variant) {
       case 'secondary':
-        return [styles.button, styles.secondary];
-      case 'accent':
-        return [styles.button, styles.accent];
+        baseStyle = buttonStyles.secondary;
+        break;
       case 'outline':
-        return [styles.button, styles.outline];
+        baseStyle = buttonStyles.outline;
+        break;
+      case 'ghost':
+        baseStyle = buttonStyles.ghost;
+        break;
       default:
-        return [styles.button, styles.primary];
+        baseStyle = buttonStyles.primary;
     }
+
+    if (size === 'large') {
+      baseStyle = { ...baseStyle, ...buttonStyles.large };
+    } else if (size === 'small') {
+      baseStyle = { 
+        ...baseStyle, 
+        paddingVertical: 12, 
+        paddingHorizontal: 16,
+        borderRadius: 8,
+      };
+    }
+
+    return baseStyle;
   };
 
-  const getTextStyle = () => {
-    return variant === 'outline' ? textStyles.buttonTextOutline : textStyles.buttonText;
+  const getTextStyle = (): TextStyle => {
+    let baseTextStyle = textStyles.buttonText;
+    
+    if (variant === 'outline') {
+      baseTextStyle = textStyles.buttonTextOutline;
+    } else if (variant === 'ghost') {
+      baseTextStyle = { ...textStyles.buttonText, color: colors.primary };
+    }
+
+    if (size === 'large') {
+      baseTextStyle = { ...baseTextStyle, fontSize: 18 };
+    } else if (size === 'small') {
+      baseTextStyle = { ...baseTextStyle, fontSize: 14 };
+    }
+
+    return baseTextStyle;
   };
+
+  const buttonStyle = [
+    getButtonStyle(),
+    disabled && styles.disabled,
+    style,
+  ];
+
+  const buttonTextStyle = [
+    getTextStyle(),
+    disabled && styles.disabledText,
+    textStyle,
+  ];
 
   return (
     <TouchableOpacity
-      style={[
-        ...getButtonStyle(),
-        disabled && styles.disabled,
-        style,
-      ]}
+      style={buttonStyle}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
@@ -51,39 +97,23 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
       {loading ? (
         <ActivityIndicator 
           size="small" 
-          color={variant === 'outline' ? colors.primary : colors.card} 
+          color={variant === 'outline' || variant === 'ghost' ? colors.primary : colors.card} 
         />
       ) : (
-        <Text style={getTextStyle()}>{title}</Text>
+        <>
+          {icon}
+          <Text style={buttonTextStyle}>{title}</Text>
+        </>
       )}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-  },
-  primary: {
-    backgroundColor: colors.primary,
-  },
-  secondary: {
-    backgroundColor: colors.secondary,
-  },
-  accent: {
-    backgroundColor: colors.accent,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
   disabled: {
-    opacity: 0.6,
+    opacity: 0.5,
+  },
+  disabledText: {
+    opacity: 0.7,
   },
 });
